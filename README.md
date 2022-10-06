@@ -272,10 +272,8 @@ ssh-keygen -t ed25519 -a 200 -C "your_email@example.com"
       key: ${{ secrets.KEY }}
       port: ${{ secrets.PORT }}
 +     envs: FOO,BAR,SHA
-      script: |
-        echo "I am $FOO"
-        echo "I am $BAR"
-        echo "sha: $SHA"
+      container_name: blog
+      container_port: 80
 ```
 
 _Inside `env` object, you need to pass every environment variable as a string, passing `Integer` data type or any other may output unexpected results._
