@@ -1,10 +1,6 @@
-# 🚀 SSH for GitHub Actions
+# 🚀 SSH DOCKER for GitHub Actions
 
 [GitHub Action](https://github.com/features/actions) for executing remote ssh commands.
-
-![ssh workflow](./images/ssh-workflow.png)
-
-[![Actions Status](https://github.com/appleboy/ssh-action/workflows/remote%20ssh%20command/badge.svg)](https://github.com/appleboy/ssh-action/actions)
 
 **Important**: Only support **Linux** [docker](https://www.docker.com/) container.
 
@@ -23,7 +19,8 @@ See [action.yml](./action.yml) for more detailed information.
 * `key` - content of ssh private key. ex raw content of ~/.ssh/id_rsa
 * `key_path` - path of ssh private key
 * `fingerprint` - fingerprint SHA256 of the host public key, default is to skip verification
-* `script` - execute commands
+* `container_name` - container prefix
+* `container_port` - container port
 * `script_stop` - stop script after first failure
 * `envs` - pass environment variable to shell script
 * `debug` - enable debug mode
@@ -58,13 +55,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: executing remote ssh commands using password
-      uses: appleboy/ssh-action@master
+      uses: apotox/ssh-docker-action@master
       with:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
         password: ${{ secrets.PASSWORD }}
         port: ${{ secrets.PORT }}
-        script: whoami
+        container_name: blog
+        container_port: 80
 ```
 
 output:
@@ -190,7 +188,7 @@ ssh-keygen -t ed25519 -a 200 -C "your_email@example.com"
 
 ```yaml
 - name: executing remote ssh commands using password
-  uses: appleboy/ssh-action@master
+  uses: apotox/ssh-docker-action@master
   with:
     host: ${{ secrets.HOST }}
     username: ${{ secrets.USERNAME }}
@@ -203,84 +201,67 @@ ssh-keygen -t ed25519 -a 200 -C "your_email@example.com"
 
 ```yaml
 - name: executing remote ssh commands using ssh key
-  uses: appleboy/ssh-action@master
+  uses: apotox/ssh-docker-action@master
   with:
     host: ${{ secrets.HOST }}
     username: ${{ secrets.USERNAME }}
     key: ${{ secrets.KEY }}
     port: ${{ secrets.PORT }}
-    script: whoami
+    container_name: blog
+    container_port: 80
 ```
 
-#### Multiple Commands
 
-```yaml
-- name: multiple command
-  uses: appleboy/ssh-action@master
-  with:
-    host: ${{ secrets.HOST }}
-    username: ${{ secrets.USERNAME }}
-    key: ${{ secrets.KEY }}
-    port: ${{ secrets.PORT }}
-    script: |
-      whoami
-      ls -al
-```
-
-![result](./images/output-result.png)
 
 #### Multiple Hosts
 
 ```diff
   - name: multiple host
-    uses: appleboy/ssh-action@master
+    uses: apotox/ssh-docker-action@master
     with:
 -     host: "foo.com"
 +     host: "foo.com,bar.com"
       username: ${{ secrets.USERNAME }}
       key: ${{ secrets.KEY }}
       port: ${{ secrets.PORT }}
-      script: |
-        whoami
-        ls -al
+      container_name: blog
+      container_port: 80
 ```
 
 #### Multiple hosts with different port
 
 ```diff
   - name: multiple host
-    uses: appleboy/ssh-action@master
+    uses: apotox/ssh-docker-action@master
     with:
 -     host: "foo.com"
 +     host: "foo.com:1234,bar.com:5678"
       username: ${{ secrets.USERNAME }}
       key: ${{ secrets.KEY }}
-      script: |
-        whoami
-        ls -al
+      container_name: blog
+      container_port: 80
 ```
 
 #### Synchronous execution on multiple hosts
 
 ```diff
   - name: multiple host
-    uses: appleboy/ssh-action@master
+    uses: apotox/ssh-docker-action@master
     with:
       host: "foo.com,bar.com"
 +     sync: true
       username: ${{ secrets.USERNAME }}
       key: ${{ secrets.KEY }}
       port: ${{ secrets.PORT }}
-      script: |
-        whoami
-        ls -al
+      container_name: blog
+      container_port: 80
 ```
 
 #### Pass environment variable to shell script
 
 ```diff
   - name: pass environment
-    uses: appleboy/ssh-action@master
+    uses: apotox/ssh-docker-action@master
 +   env:
 +     FOO: "BAR"
 +     BAR: "FOO"
@@ -305,16 +286,15 @@ _Inside `env` object, you need to pass every environment variable as a string, p
 
 ```diff
   - name: stop script if command error
-    uses: appleboy/ssh-action@master
+    uses: apotox/ssh-docker-action@master
     with:
       host: ${{ secrets.HOST }}
       username: ${{ secrets.USERNAME }}
       key: ${{ secrets.KEY }}
       port: ${{ secrets.PORT }}
 +     script_stop: true
-      script: |
-        mkdir abc/def
-        ls -al
+      container_name: blog
+      container_port: 80
 ```
 
 output:
@@ -358,7 +338,7 @@ Host FooServer
 
 ```diff
   - name: ssh proxy command
-    uses: appleboy/ssh-action@master
+    uses: apotox/ssh-docker-action@master
     with:
       host: ${{ secrets.HOST }}
       username: ${{ secrets.USERNAME }}
@@ -368,9 +348,8 @@ Host FooServer
 +     proxy_username: ${{ secrets.PROXY_USERNAME }}
 +     proxy_key: ${{ secrets.PROXY_KEY }}
 +     proxy_port: ${{ secrets.PROXY_PORT }}
-      script: |
-        mkdir abc/def
-        ls -al
+      container_name: blog
+      container_port: 80
 ```
 
 #### Protecting a Private Key
@@ -381,16 +360,15 @@ It is not uncommon for files to leak from backups or decommissioned hardware, an
 
 ```diff
   - name: ssh key passphrase
-    uses: appleboy/ssh-action@master
+    uses: apotox/ssh-docker-action@master
     with:
       host: ${{ secrets.HOST }}
       username: ${{ secrets.USERNAME }}
       key: ${{ secrets.KEY }}
       port: ${{ secrets.PORT }}
 +     passphrase: ${{ secrets.PASSPHRASE }}
-      script: |
-        whoami
-        ls -al
+      container_name: blog
+      container_port: 80
 ```
 
 #### Using host fingerprint verification
@@ -407,21 +385,20 @@ Now you can adjust you config:
 
 ```diff
   - name: ssh key passphrase
-    uses: appleboy/ssh-action@master
+    uses: apotox/ssh-docker-action@master
     with:
       host: ${{ secrets.HOST }}
       username: ${{ secrets.USERNAME }}
       key: ${{ secrets.KEY }}
       port: ${{ secrets.PORT }}
 +     fingerprint: ${{ secrets.FINGERPRINT }}
-      script: |
-        whoami
-        ls -al
+      container_name: blog
+      container_port: 80
 ```
 
 ## Contributing
 
-We would love for you to contribute to `appleboy/ssh-action`, pull requests are welcome!
+We would love for you to contribute to `apotox/ssh-docker-action`, pull requests are welcome!
 
 ## License
 

@@ -1,6 +1,10 @@
 name: remote ssh command
 
-on: [push]
+# on: [push]
+on:
+  push:
+    branches:
+      - masterx
 
 env:
   FOO: "BAR"
