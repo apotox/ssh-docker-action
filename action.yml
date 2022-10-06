@@ -1,6 +1,6 @@
-name: 'SSH Remote Commands'
-description: 'Executing remote ssh commands'
-author: 'Bo-Yi Wu'
+name: 'Docker Remote Runner'
+description: 'run remote docker commands'
+author: 'safi bouhentala'
 inputs:
   host:
     description: 'ssh host'
@@ -58,8 +58,10 @@ inputs:
   proxy_use_insecure_cipher:
     description: 'include more ciphers with use_insecure_cipher'
     default: false
-  script:
-    description: 'execute commands'
+  container_name:
+    description: 'container and image prefix'
+  container_port:
+    description: 'container port'
   script_stop:
     description: 'stop script after first failure'
     default: false
